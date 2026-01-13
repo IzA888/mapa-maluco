@@ -1,131 +1,169 @@
-# 🎮 Jogo: **Atlas das Curiosidades Irrelevantes**
+# 🎮 Jogo Geográfico Experimental — Mapa Maluco
 
-## 1. Conceito do Jogo
-
-O **Atlas das Curiosidades Irrelevantes** é um jogo geográfico interativo que apresenta:
-
-* mapas de calor
-* marcadores coloridos
-* áreas destacadas
-
-…baseados em **informações que parecem importantes**, mas **não têm relevância prática alguma**.
-
-O objetivo é **induzir interpretação**, mesmo quando os dados **não justificam conclusões**.
+Jogo educacional e experimental baseado em mapas interativos, dados climáticos reais e sistemas de decisão que **não revelam sua lógica interna**.
 
 
-## 2. Objetivo do Jogo
 
-* Estimular pensamento crítico sobre visualizações
-* Questionar a autoridade dos mapas
-* Demonstrar como dados irrelevantes podem parecer científicos
-* Mostrar que **mapas não explicam causalidade**
+## 🧩 Sobre o Projeto
 
-📌 Não há vitória nem derrota.
-📌 O jogo é a interpretação errada.
+**Mapa Maluco** é um jogo geográfico experimental desenvolvido para web, no qual o jogador explora mapas, desenha áreas, interage com pontos e interpreta mapas de calor gerados a partir de dados reais e curiosidades aparentemente irrelevantes.
+
+O sistema reage às ações do jogador, mas **não explica como toma decisões**, incentivando exploração, pensamento crítico e interpretação espacial.
 
 
-## 3. Tipos de Curiosidades Utilizadas (irrelevantes por design)
 
-Exemplos de dados exibidos:
+## 🎯 Objetivo do Jogo
 
-* Pessoas que pensaram em café naquele dia ☕
-* Número estimado de ideias abandonadas
-* Frequência de bocejos por bairro 😮
-* Lugares onde alguém já disse “depois eu vejo”
-* Pontos com alta concentração de pensamentos inúteis
+- Explorar mapas interativos
+- Interpretar padrões espaciais
+- Tomar decisões sem conhecer as regras explícitas
+- Aprender geografia, clima e território de forma lúdica
 
-Esses dados **não explicam nada**, mas **parecem explicar tudo**.
-
-## 4. Mecânica do Mapa
-
-### 🔥 Mapas de Calor
-
-* Intensidade baseada em números arbitrários
-* Gradientes fortes induzem sensação de importância
-* Não representam fenômenos reais
-
-### 📍 Marcadores de Pontos
-
-* Cada ponto possui uma curiosidade
-* Ícones e cores sugerem relevância
-* Popups com textos pseudoexplicativos
-
-📌 Nada disso altera o mundo real.
-
-## 5. Camadas e Interação
-
-O usuário pode:
-
-* ativar/desativar camadas
-* alternar mapas base (normal / satélite)
-* clicar em pontos para “entender” o fenômeno
-
-O sistema **não confirma nem nega interpretações**.
+> O jogo não busca respostas corretas, mas estimular a observação e a curiosidade.
 
 
-## 6. Regras Visíveis ao Jogador
 
-Nenhuma regra é apresentada.
+## 🧠 Conceito Central
 
-O jogador apenas:
-
-* observa
-* clica
-* interpreta
-
-As regras de geração dos dados **não são reveladas**.
+- Uso de **dados reais** (clima, localização)
+- Apresentação lúdica e ambígua das informações
+- Sistema de decisão invisível ao jogador
+- Consequências visuais e narrativas, não numéricas
 
 
-## 7. Sistema de Decisão (Oculto)
 
-O jogo pode:
+## 🗺️ Mecânicas Principais
 
-* alterar intensidades
-* mudar cores
-* reposicionar pontos
+### 🧭 Exploração do Mapa
+- Navegação livre
+- Zoom e deslocamento
+- Alternância entre mapas base
 
-📌 Essas alterações **não seguem lógica geográfica real**
-📌 O sistema **não informa quando muda**
+### ✏️ Seleção de Área
+- Desenho de polígonos interativos
+- Seleção de regiões específicas
+- Áreas influenciam eventos e análises
 
+### 📍 Pontos de Interesse
+- Marcadores no mapa
+- Curiosidades irrelevantes
+- Feedbacks enigmáticos do sistema
 
-## 8. Experiência Esperada
-
-O jogador:
-
-* tenta encontrar padrões
-* cria teorias
-* confia no mapa
-* percebe a inconsistência (ou não)
-
-Esse desconforto é proposital.
-
-## 9. Tecnologias Envolvidas
-
-* Python
-* Streamlit
-* Folium
-* HeatMap
-* Camadas interativas
-* Dados gerados artificialmente
+### 🔥 Heatmap (Mapa de Calor)
+- Representação visual de influência climática ou presença
+- Sem valores numéricos explícitos
+- Interpretação subjetiva pelo jogador
 
 
-## 10. Aplicações Educacionais
 
-Esse jogo pode ser usado para:
+## 🌦️ Dados Utilizados
 
-* ensino de cartografia crítica
-* ética em visualização de dados
-* introdução à análise espacial
-* discussão sobre fake data
-* letramento geográfico
+### 📆 Clima do Dia Anterior
+- Temperatura média
+- Cobertura média de nuvens
+- Dados obtidos via API climática
 
-## 11. Mensagem Central do Jogo
-
-> Um mapa bonito não é um mapa verdadeiro.
-> Uma visualização convincente não é evidência.
+Esses dados influenciam:
+- Intensidade do heatmap
+- Aparição de eventos
+- Respostas do sistema
 
 
-## 12. Encerramento
 
-O **Atlas das Curiosidades Irrelevantes** não ensina geografia.
-Ele ensina **desconfiança visual**.
+## 🗺️ Mapas Base
+
+### 🗺️ OpenStreetMap
+- Contexto urbano
+- Ruas, bairros e pontos de referência
+
+### 🛰️ Satélite
+- Visualização ambiental
+- Ideal para análise territorial
+
+📌 As **camadas de dados dependem do mapa base selecionado**.
+
+
+
+## 🎛️ Camadas de Dados
+
+| Camada    | Função no Jogo         |
+| --------- | ---------------------- |
+| Pontos    | Eventos e curiosidades |
+| Polígonos | Áreas de decisão       |
+| Heatmap   | Influência invisível   |
+
+O jogador pode ativar ou desativar camadas livremente.
+
+
+
+## 🧠 Sistema de Decisão Oculta
+
+O jogo possui um motor interno que considera:
+- Localização geográfica
+- Tamanho e forma do polígono
+- Intensidade do mapa de calor
+- Histórico de interações
+
+⚠️ A lógica **não é revelada ao jogador**.
+
+
+
+## 🎮 Experiência do Jogador
+
+O jogo estimula:
+- Exploração livre
+- Tentativa e erro
+- Interpretação visual
+- Aprendizado indireto
+
+Não há:
+- Pontuação explícita
+- Caminhos lineares
+- Respostas claramente corretas
+
+
+
+## 📚 Aplicações Educacionais
+
+- Geografia urbana
+- Sensoriamento remoto
+- Clima e meio ambiente
+- Pensamento espacial
+- Jogos sérios (serious games)
+
+
+
+## ⚠️ Limitações
+
+- Dados climáticos são aproximados
+- Não substitui análises científicas
+- Foco em experiência lúdica, não precisão técnica
+
+
+
+## 🔮 Possíveis Evoluções
+
+- Modos de jogo (exploração, desafio, mistério)
+- Narrativa procedural
+- Ranking oculto
+- Integração completa com Google Earth Engine
+- Eventos temporais automáticos
+
+
+
+## 🛠️ Tecnologias Utilizadas
+
+- Python
+- Streamlit
+- Folium
+- APIs Climáticas
+- Dados Geoespaciais
+
+
+
+## 📝 Observação Final
+
+> Este jogo não ensina respostas.  
+> Ele ensina a **olhar para o espaço de outra forma**.
+
+A lógica existe, mas não precisa ser compreendida para que o aprendizado aconteça.

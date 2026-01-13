@@ -1,3 +1,5 @@
+import asyncio
+import aiohttp
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
@@ -6,7 +8,7 @@ import pandas as pd
 from geopy.geocoders import Nominatim
 from datetime import date, timedelta
 import requests
-from shapely.geometry import shape
+from shapely.geometry import shape, Polygon, MultiPolygon, GeometryCollection
 import numpy as np
 
 st.set_page_config(page_title="Mapa maluco", layout="centered")
@@ -23,19 +25,52 @@ pontos = pd.DataFrame({
 
 heatmap_data = pontos[["lat", "lon"]].values.tolist()
 
-# criação de mapa (base)
-# mapa = folium.Map(
-#     location=[-1.4558, -48.4902],
-#     zoom_start=13,
-#     zoom_control=True,
-#     tiles=None
-# )
+@st.cache_data(ttl=3600)
+def consulta_clima(url):
+    try:
+        res = requests.get(url, timeout=100)
+        res.raise_for_status()
+        return res.json()
+    except requests.exceptions.RequestException as e:
+        st.warning("Não foi posível acessar dados climáticos.")
+        st.caption(str(e))
+        return None
+        
+async def consulta_clima_async(url):
+    try:
+        async with aiohttp.ClientSession().get(url, timeout=10) as resp:
+            if resp.status != 200:
+                return None
+            data = await resp.json()
+            return data.get("daily", {}).get("cloudcover_mean", [None])[0]
+    except Exception:
+        return None
+
+
+def extrair_poligonos(geom):
+    if isinstance(geom, Polygon):
+        return [geom]
+    
+    if isinstance(geom, MultiPolygon):
+        return list(geom.geoms)
+    
+    if isinstance(geom, GeometryCollection):
+        return [g for g in geom.geoms if isinstance(g, Polygon)]
+    
+    return []
 
 
 # escolha da base
 base = st.radio("Base cartográfica", ["OpenStreetMap", "Satélite"],
                 horizontal=True) 
 
+# #criação de mapa (base)
+# mapa = folium.Map(
+#     location=[-1.4558, -48.4902],
+#     zoom_start=13,
+#     zoom_control=True,
+#     tiles=None
+# )
 # # marcador
 # folium.Marker(
 #     [latitude, longitude],
@@ -43,19 +78,19 @@ base = st.radio("Base cartográfica", ["OpenStreetMap", "Satélite"],
 #     tooltip="Clique aqui"
 # ).add_to(mapa)
 
+
 # camadas de mapa condicionais
 if base == "OpenStreetMap":
     mapa = folium.Map(
         location=[-1.4558, -48.4902],
         zoom_start=13,
         zoom_control=True,
-        tiles="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.pn",
+        tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         attr="© OpenStreetMap contributors",
         name="OpenStreetMap"
     )
 
     # camada marcadores(dependentes)
-
     layer_pontos = folium.FeatureGroup(name="📍 Pontos")
 
     for _, row in pontos.iterrows():
@@ -106,16 +141,22 @@ if base == "OpenStreetMap":
         }
     ).add_to(mapa)
 
+    st_folium(mapa, use_container_width=True, height=500)
+
+    #controle de camadas
+    folium.LayerControl(collapsed=False).add_to(mapa)
+
 # exibição no streamlit e salvar clicks
 else:
     mapa = folium.Map(   
         location=[-1.4558, -48.4902],
         zoom_start=12,
         zoom_control=True, 
-        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        attr="Esri",
-        name="Satélite"
-        )
+        tiles="EsriWorldImagery",
+        attr="Esri World Imagery",
+        name="Satélite",
+        control=True
+    )
     
     # polígonos interativos
     Draw(
@@ -128,22 +169,33 @@ else:
         }
     ).add_to(mapa)
 
+    # camadas de dados
+    layer_pontos = folium.FeatureGroup(name="📍 Pontos")
+    layer_area = folium.FeatureGroup(name="Área de estudo")
+    layer_heat = folium.FeatureGroup(name="🔥 Heatmap")
+
+    
+    layer_pontos.add_to(mapa)
+    layer_area.add_to(mapa)
+    layer_heat.add_to(mapa)
+
+    #controle de camadas
+    folium.LayerControl(collapsed=False).add_to(mapa)
+
     resultados = st_folium(mapa, use_container_width=True, height=500)
 
     if resultados and resultados.get("last_clicked"):
         lat = resultados["last_clicked"]["lat"]
         lon = resultados["last_clicked"]["lng"]
 
-        st.success(f"clique registrado: {lat}, {lon}")
 
         # enderço do ponto
-        geolocator = Nominatim(user_agent="mapa-maluco-app")
+        geolocator = Nominatim(user_agent="mapa-maluco-app", timeout=10)
         location = geolocator.reverse((lat, lon), exactly_one=True)
 
         if location:
-            st.write("Endereço, provável, do ponto: ", location.address)
+            st.success(f"Endereço, provável, do ponto: {location.address}")
             # mardador de endereço
-            layer_pontos = folium.FeatureGroup(name="📍 Pontos")
             folium.Marker(
                 [lat, lon],
                 popup=f"""
@@ -151,7 +203,7 @@ else:
                 """,
                 icon=folium.Icon(color="blue", icon="cloud")
             ).add_to(layer_pontos)
-        layer_pontos.add_to(mapa)
+
 
     # exibir clima do dia anterior
     ontem = date.today() - timedelta(days=1)
@@ -174,11 +226,10 @@ else:
         # lat_interno = ponto_interno.y
         # lon_interno = ponto_interno.x
 
-
         # consulta API previsão do tempo
         url = (
             "https://api.open-meteo.com/v1/forecast"
-            f"?latitute={lat_centro}"
+            f"?latitude={lat_centro}"
             f"&longitude={lon_centro}"
             f"&daily=temperature_2m_mean"
             f"&start_date={ontem}"
@@ -186,22 +237,29 @@ else:
             f"&timezone=auto"
         )
 
-        res = requests.get(url).json()
+        res = consulta_clima(url)
 
-        temp = res.get("daily", {}).get("temperature_2m_mean", [None])[0]
+        temp = (
+            res.get("daily", {})
+                .get("temperature_2m_mean", [None])[0]
+            if res else None
+            )
 
         # área com previsão do tempo
-        layer_area = folium.FeatureGroup(name="Área de estudo")
 
-        folium.GeoJson(
-            geojson[0],
-            color="purple",
-            fill=True,
-            fill_opacity=0.3,
-            popup=f"Temperatura de ontem: {temp}"
-        ).add_to(layer_area)
+        poligonos = extrair_poligonos(poligono)
+        #converter polígono - () - em coordenadas para o folium - [] -
+        for pol in poligonos:
+            coords = list(pol.exterior.coords)
+            coords_folium = [[lat,lon] for lon, lat in coords]
 
-        layer_area.add_to(mapa)
+            folium.Polygon(
+                locations=coords_folium,
+                color="purple",
+                fill=True,
+                fill_opacity=0.3,
+                popup=f"Temperatura de ontem: {temp}"
+            ).add_to(layer_area)
 
     # limites aproximados de belém
     min_lat, max_lat = -1.50, -1.42
@@ -213,7 +271,7 @@ else:
 
             url = (
                 "https://api.open-meteo.com/v1/forecast"
-                f"?latitute={lat}" #região de belém
+                f"?latitude={lat}" #região de belém
                 f"&longitude={lon}"
                 f"&daily=cloudcover_mean"
                 f"&start_date={ontem}"
@@ -221,25 +279,32 @@ else:
                 f"&timezone=auto"
             )
 
-            res = requests.get(url).json()
-
-            clouds = res.get("daily", {}).get("cloudcover_mean", [None])[0]
+            clouds = asyncio.run(consulta_clima_async(url))
 
             # mapa de calor de cobertura de nuvens
-            if clouds and isinstance(clouds[0], (int, float)):
-                heatmap_data.append(
-                    [lat, lon, clouds / 100] #intensidade normalizada (0-1)
+            if clouds is None:
+                continue
+            if not isinstance(clouds, (int, float)):
+                continue
+            intensidade = clouds / 100 #intensidade normalizada (0-1)
+            heatmap_data.append(
+                    [lat, lon, intensidade] 
                 )
+        
+    heatmap_data_safe = [
+        item for item in heatmap_data if isinstance(item, (list, tuple)) and len(item) == 3
+    ]
 
     # camada heatmap
-    layer_heat = folium.FeatureGroup(name="🔥 Heatmap")
     HeatMap(
-        heatmap_data,
+        heatmap_data_safe,
         radius=50,
         blur=30,
         max_zoom=13
     ).add_to(layer_heat)
-    layer_heat.add_to(mapa)
-    
-#controle de camadas
-folium.LayerControl(collapsed=False).add_to(mapa)
+
+    #controle de camadas
+    folium.LayerControl(collapsed=False).add_to(mapa)
+
+    #renderizar mapa
+    st_folium(mapa, use_container_width=True, height=500)
