@@ -95,8 +95,8 @@ Draw(
         "polyline": False,
         "rectangle": True,
         "polygon": True,
-        "circle": False,
-        "marker": False
+        "circle": True,
+        "marker": True
     }
 ).add_to(mapa)
 
@@ -132,9 +132,7 @@ if resultados and resultados.get("last_clicked"):
     # mardador de endereço
     folium.Marker(
         location=[lat, lon],
-        popup=f"""
-        📍 {local.address}<br>
-        """,
+        popup=f"📍 {local.address}<br>",
         icon=folium.Icon(color="red", icon="cloud")
     ).add_to(layer_pontos)
 
@@ -185,17 +183,17 @@ if resultados and resultados.get("all_drawings"):
     #converter polígono - () - em coordenadas para o folium - [] -
     for pol in poligonos:
         coords = list(pol.exterior.coords)
+        
+        coords_folium = [[lat,lon] for lon, lat in coords]
 
-    coords_folium = [[lat,lon] for lon, lat in coords]
-
-    folium.Polygon(
-        locations=coords_folium,
-        weight=4,
-        color="purple",
-        fill=True,
-        fill_opacity=0.4,
-        popup=f"Temperatura de ontem: {temp}"
-    ).add_to(layer_area)
+        folium.Polygon(
+            locations=coords_folium,
+            weight=4,
+            color="purple",
+            fill=True,
+            fill_opacity=0.4,
+            popup=f"Temperatura de ontem: {temp}"
+        ).add_to(layer_area)
 
 # limites aproximados de belém
 min_lat, max_lat = -1.50, -1.42
